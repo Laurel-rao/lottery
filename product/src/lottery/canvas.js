@@ -65,7 +65,6 @@
 
   function drawStars() {
     var pixelX, pixelY, pixelRadius;
-
     // Resize to the screen
     if (
       canvas.width != window.innerWidth ||

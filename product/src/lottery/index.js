@@ -75,7 +75,7 @@ function initAll() {
       // console.log(HIGHLIGHT_CELL)
       basicData.prizes = prizes;
       setPrizes(prizes);
-
+      // todo 抽奖人员 与表格显示人员不一致问题
       TOTAL_CARDS = ROW_COUNT * COLUMN_COUNT;
 
       // 读取当前已设置的抽奖结果
@@ -108,6 +108,7 @@ function initAll() {
       basicData.users = data;
 
       initCards();
+      console.log(targets.table)
       startMaoPao();
       animate();
       shineCard();
@@ -115,13 +116,17 @@ function initAll() {
   });
 }
 
-function initCards() {
-  let member = basicData.users.slice(),
+function initCards(users=[]) {
+  // todo 显示表格
+  if (users.length === 0){
+    users = basicData.users;
+  }
+  let member = users.slice(),
     showCards = [],
     length = member.length;
 
   let isBold = false,
-    showTable = basicData.leftUsers.length === basicData.users.length,
+    showTable = basicData.leftUsers.length === basicData.users.length, // 是否为全新中奖
     index = 0,
     totalMember = member.length,
     position = {
@@ -230,6 +235,7 @@ function bindEvent() {
     }
 
     let target = e.target.id;
+    console.log(target, 'target')
     switch (target) {
       // 显示数字墙
       case "welcome":
@@ -246,6 +252,7 @@ function bindEvent() {
         break;
       // 重置
       case "reset":
+        
         let doREset = window.confirm(
           "是否确认重置数据，重置后，当前已抽的奖项全部清空？"
         );
@@ -268,6 +275,7 @@ function bindEvent() {
         break;
       // 抽奖
       case "lottery":
+        console.log("抽奖")
         setLotteryStatus(true);
         // 每次抽奖前先保存上一次的抽奖数据
         saveData();
@@ -481,7 +489,7 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function selectCard(duration = 600) {
+function selectCard_old(duration = 600) {
   rotate = false;
   let width = 140,
     tag = -(currentLuckys.length - 1) / 2,
@@ -555,6 +563,81 @@ function selectCard(duration = 600) {
     tag++;
   });
 
+  new TWEEN.Tween(this)
+    .to({}, duration * 2)
+    .onUpdate(render)
+    .start()
+    .onComplete(() => {
+      // 动画结束后可以操作
+      setLotteryStatus();
+    });
+}
+
+function selectCard(duration = 600) {
+
+  // initCards(currentLuckys);
+  // switchScreen("enter");
+  // return
+  // todo 优化中奖人员信息显示
+  rotate = false;
+  // const locations = selectCard3()
+  let width = 80;
+  let heightGap = 20;
+  let locations = [];
+  const maxCols = 7;
+  const x_start = -300;
+  const y_start = -100;
+  const rows = Math.floor(currentLuckys.length / maxCols)
+  console.log(rows)
+  for (let row = 0; row < rows; row ++ ){
+    let tag = 0
+    for (let i = row * maxCols; i < (row + 1) * maxCols; i++) {
+      locations.push({
+        x: tag * width * Resolution + x_start,
+        y: row * heightGap * Resolution + y_start
+      });
+      tag ++;
+    }
+  }
+  // console.log(locations)
+
+  let text = currentLuckys.map(item => item[1]).slice(0, 5);
+  addQipao(
+    `恭喜${text.join("、")} 等 ${currentLuckys.length}人 获得${currentPrize.title}, 新的一年必定旺旺旺。`
+  );
+
+  selectedCardIndex.forEach((cardIndex, index) => {
+    changeCard(cardIndex, currentLuckys[index]);
+    var object = threeDCards[cardIndex];
+    console.log(object)
+    new TWEEN.Tween(object.position)
+      .to(
+        {
+          x: locations[index].x,
+          y: locations[index].y * Resolution,
+          z: Math.random() * 500 + 1200
+        },
+        Math.random() * duration + duration
+      )
+      .easing(TWEEN.Easing.Exponential.InOut)
+      .start();
+
+    new TWEEN.Tween(object.rotation)
+      .to(
+        {
+          x: 0,
+          y: 0,
+          z: 0
+        },
+        Math.random() * duration + duration
+      )
+      .easing(TWEEN.Easing.Exponential.InOut)
+      .start();
+
+    object.element.classList.add("prize");
+    // tag++;
+  });
+  console.log(camera, camera.position)
   new TWEEN.Tween(this)
     .to({}, duration * 2)
     .onUpdate(render)
@@ -653,6 +736,7 @@ function lottery() {
       while (selectedCardIndex.includes(cardIndex)) {
         cardIndex = random(TOTAL_CARDS);
       }
+      // todo 添加中奖人员
       selectedCardIndex.push(cardIndex);
 
       if (leftPrizeCount === 0) {
