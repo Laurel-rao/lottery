@@ -36,7 +36,8 @@ let camera,
   threeDCards = [],
   targets = {
     table: [],
-    sphere: []
+    sphere: [],
+    chosenTable: [],
   };
 
 let rotateObj;
@@ -114,6 +115,31 @@ function initAll() {
       shineCard();
     }
   });
+}
+function initCards2() {
+  const users = currentLuckys;
+  let member = users.slice(),
+    showCards = [],
+    length = member.length;
+  const row = 7;
+  const col = 10;
+  let index = 0,
+    position = {
+      x: (140 * col - 20) / 2,
+      y: (180 * row - 20) / 2
+    };
+  targets.chosenTable = []
+  for (let i = 0; i < row; i++) {
+    for (let j = 0; j < col; j++) {
+      var object = new THREE.Object3D();
+      object.position.x = j * 140 - position.x;
+      object.position.y = -(i * 180) + position.y;
+      targets.chosenTable.push(object);
+      index++;
+    }
+  }
+  controls.addEventListener("change", render);
+  bindEvent();
 }
 
 function initCards(users=[]) {
@@ -326,6 +352,12 @@ function switchScreen(type) {
       btns.enter.classList.remove("none");
       btns.lotteryBar.classList.add("none");
       transform(targets.table, 2000);
+      break;
+    case "drawed":
+      console.log("run drawed", targets.chosenTable)
+      btns.enter.classList.remove("none");
+      btns.lotteryBar.classList.add("none");
+      transform(targets.chosenTable, 2000);
       break;
     default:
       btns.enter.classList.add("none");
@@ -575,9 +607,9 @@ function selectCard_old(duration = 600) {
 
 function selectCard(duration = 600) {
 
-  // initCards(currentLuckys);
-  // switchScreen("enter");
-  // return
+  initCards2(currentLuckys);
+  switchScreen("drawed");
+  return
   // todo 优化中奖人员信息显示
   rotate = false;
   // const locations = selectCard3()
