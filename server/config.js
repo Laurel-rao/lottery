@@ -9,7 +9,7 @@
 const prizes = [
   {
     type: 0,
-    count: 1000,
+    count: 2,
     title: "",
     text: "特别奖"
   },
@@ -72,7 +72,7 @@ const EACH_COUNT = [1, 1, 5, 6, 7, 8, 9, 10];
 /**
  * 卡片公司名称标识
  */
-const COMPANY = "MoShang";
+const COMPANY = "Ruike";
 
 module.exports = {
   prizes,

@@ -138,10 +138,14 @@ router.post("/errorData", (req, res, next) => {
 // 保存数据到excel中去
 router.post("/export", (req, res, next) => {
   let type = [1, 2, 3, 4, 5, defaultType],
-    outData = [["工号", "姓名", "部门"]];
+    outData = [["中奖奖品", "工号", "姓名", "部门"]];
+  // 优化导出表格内容
   cfg.prizes.forEach(item => {
     outData.push([item.text]);
-    outData = outData.concat(luckyData[item.type] || []);
+    const prizePeople = luckyData[item.type] || []
+    prizePeople.forEach(v => {
+      outData.push([item.text].concat(v));
+    })
   });
 
   writeXML(outData, "/抽奖结果.xlsx")

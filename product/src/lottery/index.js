@@ -6,11 +6,11 @@ import {
   setPrizes,
   showPrizeList,
   setPrizeData,
-  resetPrize
+  resetPrize, startMaoPao
 } from "./prizeList";
 import { NUMBER_MATRIX } from "./config.js";
 
-const ROTATE_TIME = 3000;
+const ROTATE_TIME = 30000; // 旋转一次的时间
 const ROTATE_LOOP = 1000;
 const BASE_HEIGHT = 1080;
 
@@ -70,7 +70,9 @@ function initAll() {
       prizes = data.cfgData.prizes;
       EACH_COUNT = data.cfgData.EACH_COUNT;
       COMPANY = data.cfgData.COMPANY;
+      // 年份高亮, 确认高亮坐标
       HIGHLIGHT_CELL = createHighlight();
+      // console.log(HIGHLIGHT_CELL)
       basicData.prizes = prizes;
       setPrizes(prizes);
 
@@ -106,7 +108,7 @@ function initAll() {
       basicData.users = data;
 
       initCards();
-      // startMaoPao();
+      startMaoPao();
       animate();
       shineCard();
     }
@@ -206,6 +208,14 @@ function setLotteryStatus(status = false) {
  * 事件绑定
  */
 function bindEvent() {
+  // console.log(document.querySelectorAll(".prize-item"))
+  // document.querySelectorAll(".prize-item").forEach((v) => {v.addEventListener("click", function(e){
+  //   e.stopPropagation();
+  //   const target_id = e.currentTarget.id.split("-")[e.currentTarget.id.split("-").length - 1]
+  //   console.log(target_id, e.currentTarget)
+  //   showPrizeList(target_id)
+  //   bindEvent()
+  // })})
   document.querySelector("#menu").addEventListener("click", function (e) {
     e.stopPropagation();
     // 如果正在抽奖，则禁止一切操作
@@ -249,7 +259,7 @@ function bindEvent() {
         currentLuckys = [];
         basicData.leftUsers = Object.assign([], basicData.users);
         basicData.luckyUsers = {};
-        currentPrizeIndex = basicData.prizes.length - 1;
+        currentPrizeIndex = 0;
         currentPrize = basicData.prizes[currentPrizeIndex];
 
         resetPrize(currentPrizeIndex);
@@ -366,7 +376,7 @@ function addHighlight() {
 }
 
 /**
- * 渲染地球等
+ * 渲染地球等 变换表格 和 旋转地球
  */
 function transform(targets, duration) {
   // TWEEN.removeAll();
@@ -804,7 +814,7 @@ function reset() {
 }
 
 function createHighlight() {
-  let year = new Date().getFullYear() + "";
+  let year = new Date().getFullYear() + 1 + "";
   let step = 4,
     xoffset = 1,
     yoffset = 1,
