@@ -109,7 +109,6 @@ function initAll() {
       basicData.users = data;
 
       initCards();
-      console.log(targets.table)
       startMaoPao();
       animate();
       shineCard();
@@ -121,8 +120,8 @@ function initCards2() {
   let member = users.slice(),
     showCards = [],
     length = member.length;
-  const row = 7;
-  const col = 10;
+  const row = 6;
+  const col = 12;
   let index = 0,
     position = {
       x: (140 * col - 20) / 2,
@@ -134,6 +133,7 @@ function initCards2() {
       var object = new THREE.Object3D();
       object.position.x = j * 140 - position.x;
       object.position.y = -(i * 180) + position.y;
+      object.position.z = 1000;
       targets.chosenTable.push(object);
       index++;
     }
@@ -351,18 +351,17 @@ function switchScreen(type) {
     case "enter":
       btns.enter.classList.remove("none");
       btns.lotteryBar.classList.add("none");
-      transform(targets.table, 2000);
+      transform(targets.table, 2000, type);
       break;
     case "drawed":
-      console.log("run drawed", targets.chosenTable)
-      btns.enter.classList.remove("none");
-      btns.lotteryBar.classList.add("none");
-      transform(targets.chosenTable, 2000);
+      btns.enter.classList.add("none");
+      btns.lotteryBar.classList.remove("none");
+      transform(targets.chosenTable, 2000, type, selectedCardIndex);
       break;
     default:
       btns.enter.classList.add("none");
       btns.lotteryBar.classList.remove("none");
-      transform(targets.sphere, 2000);
+      transform(targets.sphere, 2000, type);
       break;
   }
 }
@@ -418,10 +417,23 @@ function addHighlight() {
 /**
  * 渲染地球等 变换表格 和 旋转地球
  */
-function transform(targets, duration) {
+function transform(targets, duration, type, chosenCards=[]) {
   // TWEEN.removeAll();
-  for (var i = 0; i < threeDCards.length; i++) {
+  let card_length = threeDCards.length;
+  if (chosenCards.length > 0) {
+    card_length = chosenCards.length;
+  }
+  console.log('type ==', type)
+  for (var i = 0; i < card_length; i++) {
     var object = threeDCards[i];
+    if (chosenCards.length > 0) {
+      object = threeDCards[chosenCards[i]]
+      object.element.classList.add("highlight");
+    } else {
+      if (type !== "enter") {
+        object.element.classList.remove("highlight");
+      }
+    }
     var target = targets[i];
 
     new TWEEN.Tween(object.position)
@@ -609,6 +621,11 @@ function selectCard(duration = 600) {
 
   initCards2(currentLuckys);
   switchScreen("drawed");
+  setLotteryStatus()
+  const text2 = currentLuckys.map(item => item[1]).slice(0, 5);
+  addQipao(
+    `恭喜${text2.join("、")} 等 ${currentLuckys.length}人 获得${currentPrize.title}, 新的一年必定旺旺旺。`
+  );
   return
   // todo 优化中奖人员信息显示
   rotate = false;
@@ -741,6 +758,8 @@ function lottery() {
   //   btns.lottery.innerHTML = "开始抽奖";
   //   return;
   // }
+  switchScreen("lottery");
+
   btns.lottery.innerHTML = "结束抽奖";
   rotateBall().then(() => {
     // 将之前的记录置空

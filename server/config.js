@@ -57,7 +57,7 @@ const prizes = [
   },
   {
     type: 7,
-    count: 140,
+    count: 30,
     text: "六等奖",
     title: "漫步者蓝牙耳机",
     img: "../img/edifier.jpg"
@@ -67,7 +67,7 @@ const prizes = [
 /**
  * 一次抽取的奖品个数与prizes对应
  */
-const EACH_COUNT = [1, 1, 5, 6, 7, 8, 9, 70];
+const EACH_COUNT = [1, 1, 5, 6, 7, 8, 9, 10];
 
 /**
  * 卡片公司名称标识
