@@ -618,14 +618,21 @@ function selectCard_old(duration = 600) {
 }
 
 function selectCard(duration = 600) {
-
+  rotate = false;
   initCards2(currentLuckys);
   switchScreen("drawed");
-  setLotteryStatus()
   const text2 = currentLuckys.map(item => item[1]).slice(0, 5);
   addQipao(
     `恭喜${text2.join("、")} 等 ${currentLuckys.length}人 获得${currentPrize.title}, 新的一年必定旺旺旺。`
   );
+  new TWEEN.Tween(this)
+      .to({}, duration)
+      .onUpdate(render)
+      .start()
+      .onComplete(() => {
+        // 动画结束后可以操作·
+        setLotteryStatus();
+      });
   return
   // todo 优化中奖人员信息显示
   rotate = false;
