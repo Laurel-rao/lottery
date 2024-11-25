@@ -50,14 +50,14 @@ const prizes = [
   },
   {
     type: 6,
-    count: 8,
+    count: 40,
     text: "五等奖",
     title: "Kindle",
     img: "../img/kindle.jpg"
   },
   {
     type: 7,
-    count: 11,
+    count: 70,
     text: "六等奖",
     title: "漫步者蓝牙耳机",
     img: "../img/edifier.jpg"
@@ -67,7 +67,7 @@ const prizes = [
 /**
  * 一次抽取的奖品个数与prizes对应
  */
-const EACH_COUNT = [1, 1, 5, 6, 7, 8, 9, 10];
+const EACH_COUNT = [1, 1, 5, 6, 7, 8, 20, 70];
 
 /**
  * 卡片公司名称标识

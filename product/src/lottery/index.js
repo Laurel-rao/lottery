@@ -10,7 +10,7 @@ import {
 } from "./prizeList";
 import { NUMBER_MATRIX } from "./config.js";
 
-const ROTATE_TIME = 3000;
+const ROTATE_TIME = 10000;
 const ROTATE_LOOP = 1000;
 const BASE_HEIGHT = 1080;
 
@@ -476,9 +476,52 @@ function selectCard(duration = 600) {
   let width = 140,
     tag = -(currentLuckys.length - 1) / 2,
     locates = [];
-
+  // Resolution = window.devicePixelRatio
+  // console.log(window.devicePixelRatio)
   // 计算位置信息, 大于5个分两排显示
-  if (currentLuckys.length > 5) {
+  // todo 优化0 ～ 72 个数量保证显示居中显示
+  if (currentLuckys.length > 10) {
+    // 9 * 8
+    const rows = 10
+    let yPosition = [],
+        l = selectedCardIndex.length,
+        mid = Math.ceil(l / 2);
+    for (let i = 0; i < Math.floor(currentLuckys.length / rows); i++) {
+      yPosition.push(i % 2 === 0 ? -1 * i * 87 : i * 87 + 87);
+    }
+    const y_l = yPosition.length;
+    const x_l = Math.ceil(l / yPosition.length);
+    for (let j = 0; j < y_l; j++) {
+      console.log(yPosition[j] * Resolution)
+      for (let i = 0; i < x_l; i++) {
+        const mid = Math.floor(x_l / 2);
+        tag = i + 0.5 - mid
+        locates.push({
+          x: tag * width * Resolution,
+          y: yPosition[j] * Resolution
+        });
+      }
+    }
+    // for (let i = 0; i < Math.ceil(l / j); i++) {
+    //   locates.push({
+    //     x: tag * width * Resolution,
+    //     y: yPosition[0] * Resolution
+    //   });
+    //   tag++;
+    // }
+
+    // tag = -(l - mid - 1) / 2;
+    // for (let i = mid; i < l; i++) {
+    //   locates.push({
+    //     x: tag * width * Resolution,
+    //     y: yPosition[1] * Resolution,
+    //   });
+    //   tag++;
+    // }
+
+    // locates = []
+  }
+  else if (currentLuckys.length > 5) {
     let yPosition = [-87, 87],
       l = selectedCardIndex.length,
       mid = Math.ceil(l / 2);
@@ -495,7 +538,7 @@ function selectCard(duration = 600) {
     for (let i = mid; i < l; i++) {
       locates.push({
         x: tag * width * Resolution,
-        y: yPosition[1] * Resolution
+        y: yPosition[1] * Resolution,
       });
       tag++;
     }
@@ -503,17 +546,19 @@ function selectCard(duration = 600) {
     for (let i = selectedCardIndex.length; i > 0; i--) {
       locates.push({
         x: tag * width * Resolution,
-        y: 0 * Resolution
+        y: 0 * Resolution,
       });
       tag++;
     }
   }
-
-  let text = currentLuckys.map(item => item[1]);
+  console.log(Resolution, tag)
+  console.log(locates)
+  let text = currentLuckys.map(item => item[1]).slice(0, 5);
   addQipao(
-    `恭喜${text.join("、")}获得${currentPrize.title}, 新的一年必定旺旺旺。`
+    `恭喜${text.join("、")} 等 ${currentLuckys.length} 人获得${currentPrize.title}, 新的一年必定旺旺旺。`
   );
 
+  let z_index = 2200 - (20 * (currentLuckys.length - 1));
   selectedCardIndex.forEach((cardIndex, index) => {
     changeCard(cardIndex, currentLuckys[index]);
     var object = threeDCards[cardIndex];
@@ -522,7 +567,7 @@ function selectCard(duration = 600) {
         {
           x: locates[index].x,
           y: locates[index].y * Resolution,
-          z: 2200
+          z: z_index
         },
         Math.random() * duration + duration
       )
