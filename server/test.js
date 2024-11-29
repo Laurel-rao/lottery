@@ -3,8 +3,8 @@ const fs = require("fs");
 // 测试抽奖结果数据的正确性
 var selected = {},
   repeat = [],
-  luckyData = require("/Users/xiechang/Documents/project/抽奖/product/dist/temp.json"),
-  errorData = require("/Users/xiechang/Documents/project/抽奖/product/dist/error.json");
+  luckyData = require("./cache/temp.json"),
+  errorData = require("./cache/error.json");
 
 for (let key in luckyData) {
   let item = luckyData[key];
