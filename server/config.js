@@ -8,12 +8,6 @@
  */
 const prizes = [
   {
-    type: 0,
-    count: 1000,
-    title: "",
-    text: "特别奖"
-  },
-  {
     type: 1,
     count: 2,
     text: "特等奖",
