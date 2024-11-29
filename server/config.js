@@ -61,12 +61,12 @@ const prizes = [
 /**
  * 一次抽取的奖品个数与prizes对应
  */
-const EACH_COUNT = [1, 1, 5, 6, 7, 8, 20, 70];
+const EACH_COUNT = [1, 5, 6, 7, 8, 20, 70];
 
 /**
  * 卡片公司名称标识
  */
-const COMPANY = "MoShang";
+const COMPANY = "R&S";
 
 module.exports = {
   prizes,
