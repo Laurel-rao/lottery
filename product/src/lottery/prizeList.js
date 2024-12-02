@@ -153,19 +153,28 @@ function setPrizes(pri) {
   lasetPrizeIndex = pri.length - 1;
 }
 
-function showPrizeList(currentPrizeIndex) {
+function showPrizeList(basicData, currentPrizeIndex) {
   let currentPrize = prizes[currentPrizeIndex];
   if (currentPrize.type === defaultType) {
     currentPrize.count === "不限制";
   }
   let htmlCode = `<div class="prize-mess">正在抽取<label id="prizeType" class="prize-shine">${currentPrize.text}</label><label id="prizeText" class="prize-shine">${currentPrize.title}</label>，剩余<label id="prizeLeft" class="prize-shine">${currentPrize.count}</label>个</div><ul class="prize-list">`;
-  prizes.forEach(item => {
+  prizes.forEach((item, index) => {
     if (item.type === defaultType) {
       return true;
     }
+    let leftCount = item.count;
+    if (basicData && basicData.luckyUsers && basicData.luckyUsers[item.type]) {
+      leftCount = item.count - basicData.luckyUsers[item.type].length;
+    }
+    item.leftCount = leftCount;
+
+    // 计算进度条百分比
+    const progressPercent = (leftCount / item.count * 100).toFixed(1);
+
     htmlCode += `<li id="prize-item-${item.type}" class="prize-item${
       item.type == currentPrize.type ? " shine" : ""
-    }">
+    }" data-index="${index}">
                         <span></span><span></span><span></span><span></span>
                         <div class="prize-img">
                             <img src="${item.img}" alt="${item.title}">
@@ -178,13 +187,13 @@ function showPrizeList(currentPrizeIndex) {
                                 <div class="progress">
                                     <div id="prize-bar-${
                                       item.type
-                                    }" class="progress-bar progress-bar-danger progress-bar-striped active" style="width: 100%;">
+                                    }" class="progress-bar progress-bar-danger progress-bar-striped active" style="width: ${progressPercent}%;">
                                     </div>
                                 </div>
                                 <div id="prize-count-${
                                   item.type
                                 }" class="prize-count-left">
-                                    ${item.count + "/" + item.count}
+                                    ${item.leftCount + "/" + item.count}
                                 </div>
                             </div>
                         </div>
@@ -198,7 +207,7 @@ function showPrizeList(currentPrizeIndex) {
 function resetPrize(currentPrizeIndex) {
   prizeElement = {};
   lasetPrizeIndex = currentPrizeIndex;
-  showPrizeList(currentPrizeIndex);
+  showPrizeList(basicData, currentPrizeIndex);
 }
 
 let setPrizeData = (function () {
@@ -247,12 +256,13 @@ let setPrizeData = (function () {
     }
 
     if (currentPrizeIndex === 0) {
-      prizeElement.prizeType.textContent = "特别奖";
-      prizeElement.prizeText.textContent = " ";
-      prizeElement.prizeLeft.textContent = "不限制";
-      return;
+      alert("抽奖已结束")
+      return
+      // prizeElement.prizeType.textContent = "特别奖";
+      // prizeElement.prizeText.textContent = " ";
+      // prizeElement.prizeLeft.textContent = "不限制";
+      // return;
     }
-
     count = totalCount - count;
     count = count < 0 ? 0 : count;
     let percent = (count / totalCount).toFixed(2);

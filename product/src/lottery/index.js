@@ -81,6 +81,7 @@ function initAll() {
       basicData.leftUsers = data.leftUsers;
       basicData.luckyUsers = data.luckyData;
 
+      // 设置默认抽奖奖项为最后一个未抽完的奖项
       let prizeIndex = basicData.prizes.length - 1;
       for (; prizeIndex > -1; prizeIndex--) {
         if (
@@ -95,9 +96,54 @@ function initAll() {
         break;
       }
 
-      showPrizeList(currentPrizeIndex);
+      showPrizeList(basicData, currentPrizeIndex);
       let curLucks = basicData.luckyUsers[currentPrize.type];
       setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
+      // 使用setTimeout确保DOM已完全加载
+      setTimeout(() => {
+        const prizeItems = document.querySelectorAll('.prize-item');
+        
+        prizeItems.forEach((item, index) => {
+          
+          // 移除可能存在的旧事件监听器
+          // item.removeEventListener('click', handlePrizeClick);
+          
+          // 直接绑定click事件而不是addEventListener
+          item.onclick = function(e) {
+            console.log('Prize item clicked:', index); // 调试日志
+            
+            // 移除所有prize-item的高亮
+            document.querySelectorAll('.prize-item').forEach(item => {
+              item.classList.remove('shine');
+            });
+            
+            // 给当前点击的prize-item添加高亮
+            this.classList.add('shine');
+            
+            if(isLotting) {
+              addQipao("正在抽奖中，请等待当前抽奖结束...");
+              return;
+            }
+
+            const prizeIndex = parseInt(this.dataset.index);
+            const prize = basicData.prizes[prizeIndex];
+            const luckyData = basicData.luckyUsers[prize.type];
+            if(luckyData && luckyData.length >= prize.count) {
+              addQipao(`${prize.title}已抽完!`);
+              return;
+            }
+
+            currentPrizeIndex = prizeIndex;
+            currentPrize = prize;
+            showPrizeList(basicData, currentPrizeIndex);
+            
+            let curLucks = basicData.luckyUsers[currentPrize.type];
+            setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
+            
+            addQipao(`正在抽取${prize.title},准备好...`);
+          };
+        });
+      }, 500);
     }
   });
 
@@ -484,7 +530,6 @@ function selectCard(duration = 600) {
     rows = 1;
   }
   let cols = Math.ceil(total / rows);
-  console.log(rows, cols);
   // 如果最后一行太少，则减少一行使布局更紧凑
   if (total <= rows * (cols - 1)) {
     rows--;
@@ -530,7 +575,6 @@ function selectCard(duration = 600) {
 
     // 设置缩放
     object.element.style.transform = `scale(${scale})`;
-    console.log(locates, index)
     new TWEEN.Tween(object.position)
       .to(
         {     
@@ -659,7 +703,6 @@ function lottery() {
         break;
       }
     }
-    console.log(currentLuckys, selectedUserId)
     selectCard();
   });
 }
@@ -681,9 +724,22 @@ function saveData() {
   basicData.luckyUsers[type] = curLucky;
 
   if (currentPrize.count <= curLucky.length) {
-    currentPrizeIndex--;
-    if (currentPrizeIndex <= -1) {
-      currentPrizeIndex = 0;
+    // 当前奖项已抽完,寻找下一个未抽完的奖项
+    let nextIndex = -1;
+    for(let i = basicData.prizes.length - 1; i >= 0; i--) {
+      const prize = basicData.prizes[i];
+      const luckyData = basicData.luckyUsers[prize.type];
+      if(!luckyData || luckyData.length < prize.count) {
+        nextIndex = i;
+        break;
+      }
+    }
+    
+    if(nextIndex === -1) {
+      addQipao("所有奖项已抽完!");
+      currentPrizeIndex = basicData.prizes.length - 1;
+    } else {
+      currentPrizeIndex = nextIndex;
     }
     currentPrize = basicData.prizes[currentPrizeIndex];
   }
