@@ -1,3 +1,10 @@
+# Optimize Version
+
+1. Optimize the issue of duplicate draws
+2. Improve card display for more than 20 draws
+3. Save lottery results
+4. Remove the redraw process
+
 # Lottery program
 
 Annual dinner lottery program, 3D sphere raffle, support for configuration of prize information, import participants information by `Excel`, and export lottery results by `Excel`
@@ -113,14 +120,14 @@ let prizes = [{
     {
         type: 1,
         count: 2,
-        text: "Special Price"
-        title: "Mystery jackpot"
+        text: "Special Price",
+        title: "Mystery jackpot",
         img: "../img/secrit.jpg"
     },
     {
         type: 2,
         count: 5,
-        text: "First prize"
+        text: "First prize",
         title: "Mac Pro",
         img: "../img/mbp.jpg"
     }

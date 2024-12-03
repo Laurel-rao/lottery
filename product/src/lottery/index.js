@@ -643,7 +643,6 @@ function resetCard(duration = 500) {
  * 抽奖
  */
 function lottery() {
-
   let perCount = EACH_COUNT[currentPrizeIndex],
     luckyData = basicData.luckyUsers[currentPrize.type],
     leftCount = basicData.leftUsers.length,
