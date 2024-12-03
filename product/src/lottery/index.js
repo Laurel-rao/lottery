@@ -12,7 +12,7 @@ import { NUMBER_MATRIX } from "./config.js";
 
 const ROTATE_TIME = 10000;
 const ROTATE_LOOP = 1000;
-const BASE_HEIGHT = 1080;
+// const BASE_HEIGHT = 1080;
 const MAX_VISIBLE_CARDS = 119; // 最大可见卡片数
 
 let TOTAL_CARDS,
@@ -50,13 +50,14 @@ let selectedUserId = [],
     luckyUsers: {}, //已中奖人员
     leftUsers: [] //未中奖人员
   },
-  interval,
+  // interval,
   // 当前抽的奖项，从最低奖开始抽，直到抽到大奖
   currentPrizeIndex,
   currentPrize,
   // 正在抽奖
   isLotting = false,
-  currentLuckys = [];
+  currentLuckys = [],
+  allPrizeUserIds = [];
 
 initAll();
 
@@ -76,11 +77,16 @@ function initAll() {
       setPrizes(prizes);
 
       TOTAL_CARDS = ROW_COUNT * COLUMN_COUNT;
-
+      allPrizeUserIds = []
       // 读取当前已设置的抽奖结果
       basicData.leftUsers = data.leftUsers;
       basicData.luckyUsers = data.luckyData;
-
+      for (let prize in basicData.luckyUsers) {
+        const users = basicData.luckyUsers[prize]
+        users.forEach(v => {
+          allPrizeUserIds.push(v[0])
+        })
+      }
       // 设置默认抽奖奖项为最后一个未抽完的奖项
       let prizeIndex = basicData.prizes.length - 1;
       for (; prizeIndex > -1; prizeIndex--) {
@@ -96,54 +102,9 @@ function initAll() {
         break;
       }
 
-      showPrizeList(basicData, currentPrizeIndex);
+      showPrizeList(basicData, currentPrizeIndex, isLotting, callback);
       let curLucks = basicData.luckyUsers[currentPrize.type];
       setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
-      // 使用setTimeout确保DOM已完全加载
-      setTimeout(() => {
-        const prizeItems = document.querySelectorAll('.prize-item');
-        
-        prizeItems.forEach((item, index) => {
-          
-          // 移除可能存在的旧事件监听器
-          // item.removeEventListener('click', handlePrizeClick);
-          
-          // 直接绑定click事件而不是addEventListener
-          item.onclick = function(e) {
-            console.log('Prize item clicked:', index); // 调试日志
-            
-            // 移除所有prize-item的高亮
-            document.querySelectorAll('.prize-item').forEach(item => {
-              item.classList.remove('shine');
-            });
-            
-            // 给当前点击的prize-item添加高亮
-            this.classList.add('shine');
-            
-            if(isLotting) {
-              addQipao("正在抽奖中，请等待当前抽奖结束...");
-              return;
-            }
-
-            const prizeIndex = parseInt(this.dataset.index);
-            const prize = basicData.prizes[prizeIndex];
-            const luckyData = basicData.luckyUsers[prize.type];
-            if(luckyData && luckyData.length >= prize.count) {
-              addQipao(`${prize.title}已抽完!`);
-              return;
-            }
-
-            currentPrizeIndex = prizeIndex;
-            currentPrize = prize;
-            showPrizeList(basicData, currentPrizeIndex);
-            
-            let curLucks = basicData.luckyUsers[currentPrize.type];
-            setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
-            
-            addQipao(`正在抽取${prize.title},准备好...`);
-          };
-        });
-      }, 500);
     }
   });
 
@@ -160,9 +121,14 @@ function initAll() {
   });
 }
 
+function callback(value) {
+  currentPrizeIndex = value
+  currentPrize = basicData.prizes[currentPrizeIndex]
+}
+
 function initCards() {
   let member = basicData.users.slice(),
-    showCards = [],
+    // showCards = [],
     length = member.length;
 
   let isBold = false,
@@ -184,7 +150,7 @@ function initCards() {
 
   // 使用固定的网格尺寸 17x7
   const gridCols = 17;
-  const gridRows = 7;
+  // const gridRows = 7;
 
   for (let i = 0; i < length; i++) {
     const row = Math.floor(i / gridCols);
@@ -210,7 +176,7 @@ function initCards() {
     scene.add(object);
     threeDCards.push(object);
 
-    var object = new THREE.Object3D();
+    object = new THREE.Object3D();
     object.position.x = col * 140 - position.x;
     object.position.y = -(row * 180) + position.y;
     targets.table.push(object);
@@ -223,7 +189,7 @@ function initCards() {
   for (var i = 0; i < Math.min(threeDCards.length, MAX_VISIBLE_CARDS); i++) {
     var phi = Math.acos(-1 + (2 * i) / MAX_VISIBLE_CARDS);
     var theta = Math.sqrt(MAX_VISIBLE_CARDS * Math.PI) * phi;
-    var object = new THREE.Object3D();
+    object = new THREE.Object3D();
     object.position.setFromSphericalCoords(800 * Resolution, phi, theta);
     vector.copy(object.position).multiplyScalar(2);
     object.lookAt(vector);
@@ -231,7 +197,7 @@ function initCards() {
   }
 
   // 为剩余卡片添加空对象以保持数组长度一致
-  for (var i = MAX_VISIBLE_CARDS; i < threeDCards.length; i++) {
+  for (var j = MAX_VISIBLE_CARDS; j < threeDCards.length; j++) {
     targets.sphere.push(new THREE.Object3D());
   }
 
@@ -319,7 +285,7 @@ function bindEvent() {
           }
         });
 
-        resetPrize(currentPrizeIndex);
+        resetPrize(basicData, currentPrizeIndex, isLotting);
         reset();
         switchScreen("enter");
         break;
@@ -327,14 +293,13 @@ function bindEvent() {
       case "lottery":
         setLotteryStatus(true);
         // 每次抽奖前先保存上一次的抽奖数据
-        saveData();
+        // if ()
         //更新剩余抽奖数目的数据显示
         changePrize();
-        resetCard().then(res => {
+        resetCard().then(() => {
           // 抽奖
           lottery();
         });
-        addQipao(`正在抽取[${currentPrize.title}],调整好姿势`);
         break;
       // 重新抽奖
       case "reLottery":
@@ -347,21 +312,22 @@ function bindEvent() {
         setLotteryStatus(true);
         // 重新抽奖则直接进行抽取，不对上一次的抽奖数据进行保存
         // 抽奖
-        resetCard().then(res => {
+        resetCard().then(() => {
           // 抽奖
           lottery();
         });
         break;
       // 导出抽奖结果
       case "save":
-        saveData().then(res => {
-          resetCard().then(res => {
-            // 将之前的记录置空
-            currentLuckys = [];
-          });
-          exportData();
-          addQipao(`数据已保存到EXCEL中。`);
+        // saveData().then(res => {
+        //
+        // });
+        resetCard().then(() => {
+          // 将之前的记录置空
+          currentLuckys = [];
         });
+        exportData();
+        addQipao(`数据已保存到EXCEL中。`);
         break;
     }
   });
@@ -473,7 +439,7 @@ function transform(targets, duration) {
 }
 
 function rotateBall() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     scene.rotation.y = 0;
     rotateObj = new TWEEN.Tween(scene.rotation);
     rotateObj
@@ -565,9 +531,12 @@ function selectCard(duration = 600) {
   // 根据数量调整z轴间距
   const zGap = total > 25 ? 10 : (total > 16 ? 15 : 20);
   const baseZ = 1200 + zGap + 2500 / total;
-
   selectedUserId.forEach((userId, index) => {
     let object = threeDCards.find(card => card.element.id === `card-${userId}`);
+    if (!object){
+      console.log(threeDCards)
+      console.log(userId)
+    }
     // 显示被抽中的隐藏卡片
     object.element.style.display = '';
     
@@ -655,7 +624,7 @@ function resetCard(duration = 500) {
       .start();
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     new TWEEN.Tween(this)
       .to({}, duration * 2)
       .onUpdate(render)
@@ -674,28 +643,42 @@ function resetCard(duration = 500) {
  * 抽奖
  */
 function lottery() {
+
+  let perCount = EACH_COUNT[currentPrizeIndex],
+    luckyData = basicData.luckyUsers[currentPrize.type],
+    leftCount = basicData.leftUsers.length,
+    leftPrizeCount = currentPrize.count - (luckyData ? luckyData.length : 0);
+  if (leftCount < perCount) {
+    addQipao("剩余参与抽奖人员不足，现在重新设置所有人员可以进行二次抽奖！");
+    basicData.leftUsers = basicData.users.slice();
+    leftCount = basicData.leftUsers.length;
+  }
+  if (leftPrizeCount <= 0) {
+    addQipao("无剩余抽奖名额")
+    setLotteryStatus();
+    return
+  }
   btns.lottery.innerHTML = "结束抽奖";
+  addQipao(`正在抽取[${currentPrize.title}],调整好姿势`);
+
   rotateBall().then(() => {
     // 将之前的记录置空
     currentLuckys = [];
     selectedUserId = [];
     // 当前同时抽取的数目,当前奖品抽完还可以继续抽，但是不记录数据
-    let perCount = EACH_COUNT[currentPrizeIndex],
-      luckyData = basicData.luckyUsers[currentPrize.type],
-      leftCount = basicData.leftUsers.length,
-      leftPrizeCount = currentPrize.count - (luckyData ? luckyData.length : 0);
-
-    if (leftCount < perCount) {
-      addQipao("剩余参与抽奖人员不足，现在重新设置所有人员可以进行二次抽奖！");
-      basicData.leftUsers = basicData.users.slice();
-      leftCount = basicData.leftUsers.length;
-    }
-
     for (let i = 0; i < perCount; i++) {
-      let luckyId = random(leftCount);
-      let lucky = basicData.leftUsers.splice(luckyId, 1)[0];
+      let lucky = null
+      let userIndex = null
+      while (true){
+        userIndex = random(leftCount);
+        lucky = basicData.users.filter((v, index) => index === userIndex)[0];
+        if (!allPrizeUserIds.includes(lucky[0])){
+          break
+        }
+      }
       currentLuckys.push(lucky);
       selectedUserId.push(lucky[0]); // 使用user[0]作为ID
+      allPrizeUserIds.push(lucky[0]); // 使用user[0]作为ID
       leftCount--;
       leftPrizeCount--;
 
@@ -704,6 +687,7 @@ function lottery() {
       }
     }
     selectCard();
+    saveData()
   });
 }
 
@@ -735,13 +719,13 @@ function saveData() {
       }
     }
     
-    if(nextIndex === -1) {
-      addQipao("所有奖项已抽完!");
-      currentPrizeIndex = basicData.prizes.length - 1;
-    } else {
-      currentPrizeIndex = nextIndex;
-    }
-    currentPrize = basicData.prizes[currentPrizeIndex];
+    // if(nextIndex === -1) {
+    //   addQipao("所有奖项已抽完!");
+    //   currentPrizeIndex = basicData.prizes.length - 1;
+    // } else {
+    //   currentPrizeIndex = nextIndex;
+    // }
+    // currentPrize = basicData.prizes[currentPrizeIndex];
   }
 
   if (currentLuckys.length > 0) {
@@ -862,7 +846,8 @@ function exportData() {
 function reset() {
   window.AJAX({
     url: "/reset",
-    success(data) {
+    success() {
+      window.location.reload()
       console.log("重置成功");
     }
   });
@@ -912,7 +897,7 @@ window.onload = function () {
 
   musicBox.addEventListener(
     "click",
-    function (e) {
+    function () {
       if (music.paused) {
         music.play().then(
           () => {

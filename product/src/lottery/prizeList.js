@@ -153,7 +153,7 @@ function setPrizes(pri) {
   lasetPrizeIndex = pri.length - 1;
 }
 
-function showPrizeList(basicData, currentPrizeIndex) {
+function showPrizeList(basicData, currentPrizeIndex, isLotting, callback) {
   let currentPrize = prizes[currentPrizeIndex];
   if (currentPrize.type === defaultType) {
     currentPrize.count === "不限制";
@@ -202,12 +202,49 @@ function showPrizeList(basicData, currentPrizeIndex) {
   htmlCode += `</ul>`;
 
   document.querySelector("#prizeBar").innerHTML = htmlCode;
+
+  setTimeout(() => {
+    const prizeItems = document.querySelectorAll('.prize-item');
+    prizeItems.forEach((item, index) => {
+      // 直接绑定click事件而不是addEventListener
+      item.onclick = function(e) {
+        // 移除所有prize-item的高亮
+        document.querySelectorAll('.prize-item').forEach(item => {
+          item.classList.remove('shine');
+        });
+        // 给当前点击的prize-item添加高亮
+        this.classList.add('shine');
+
+        if(isLotting) {
+          addQipao("正在抽奖中，请等待当前抽奖结束...");
+          return;
+        }
+
+        const prizeIndex = parseInt(this.dataset.index);
+        const prize = basicData.prizes[prizeIndex];
+        const luckyData = basicData.luckyUsers[prize.type];
+        if(luckyData && luckyData.length >= prize.count) {
+          addQipao(`${prize.title}已抽完!`);
+          return;
+        }
+        callback(prizeIndex)
+        // currentPrizeIndex = prizeIndex;
+        currentPrize = prize;
+        // showPrizeList(basicData, currentPrizeIndex);
+
+        let curLucks = basicData.luckyUsers[currentPrize.type];
+        setPrizeData(prizeIndex, curLucks ? curLucks.length : 0, true);
+
+        addQipao(`正在抽取${prize.title},准备好...`);
+      };
+    });
+  }, 500);
 }
 
-function resetPrize(currentPrizeIndex) {
+function resetPrize(basicData, currentPrizeIndex, isLotting, callback) {
   prizeElement = {};
   lasetPrizeIndex = currentPrizeIndex;
-  showPrizeList(basicData, currentPrizeIndex);
+  showPrizeList(basicData, currentPrizeIndex, isLotting, callback);
 }
 
 let setPrizeData = (function () {
@@ -232,23 +269,23 @@ let setPrizeData = (function () {
       prizeElement.prizeText = document.querySelector("#prizeText");
     }
 
-    if (isInit) {
-      for (let i = prizes.length - 1; i > currentPrizeIndex; i--) {
-        let type = prizes[i]["type"];
-        document.querySelector(`#prize-item-${type}`).className =
-          "prize-item done";
-        document.querySelector(`#prize-bar-${type}`).style.width = "0";
-        document.querySelector(`#prize-count-${type}`).textContent =
-          "0" + "/" + prizes[i]["count"];
-      }
-    }
+    // if (isInit) {
+    //   for (let i = prizes.length - 1; i > currentPrizeIndex; i--) {
+    //     let type = prizes[i]["type"];
+    //     document.querySelector(`#prize-item-${type}`).className =
+    //       "prize-item done";
+    //     document.querySelector(`#prize-bar-${type}`).style.width = "0";
+    //     document.querySelector(`#prize-count-${type}`).textContent =
+    //       "0" + "/" + prizes[i]["count"];
+    //   }
+    // }
 
     if (lasetPrizeIndex !== currentPrizeIndex) {
       let lastPrize = prizes[lasetPrizeIndex],
         lastBox = document.querySelector(`#prize-item-${lastPrize.type}`);
-      lastBox.classList.remove("shine");
-      lastBox.classList.add("done");
-      elements.box && elements.box.classList.add("shine");
+      // lastBox.classList.remove("shine");
+      // lastBox.classList.add("done");
+      // elements.box && elements.box.classList.add("shine");
       prizeElement.prizeType.textContent = currentPrize.text;
       prizeElement.prizeText.textContent = currentPrize.title;
 
@@ -258,10 +295,6 @@ let setPrizeData = (function () {
     if (currentPrizeIndex === 0) {
       alert("抽奖已结束")
       return
-      // prizeElement.prizeType.textContent = "特别奖";
-      // prizeElement.prizeText.textContent = " ";
-      // prizeElement.prizeLeft.textContent = "不限制";
-      // return;
     }
     count = totalCount - count;
     count = count < 0 ? 0 : count;
